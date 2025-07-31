@@ -22,6 +22,7 @@
           <form>
             <input type="text" class="form-control" id="todoTitle" placeholder="Todo title...">
             <textarea rows="3" class="form-control mt-3" id="todoDesc" placeholder="Todo description..."></textarea>
+            <input type="date" class="form-control mt-3" id="todo-deadline">
             <button onclick="newTodo()" class="addBtn btn btn-sm btn-primary form-control mt-3">Add</span>
           </form>
           <button onclick="deleteAllTodos()" class="addBtn btn btn-sm btn-danger form-control mt-5">Delete All</span>
@@ -42,6 +43,7 @@
           <div class="modal-body">
             <p>Title: <span id="todo-title"></span></p>
             <p>Description: <span id="todo-description"></span></p>
+            <p>Deadline: <span id="todo-deadline-display"></span></p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary">Save changes</button>
@@ -59,114 +61,117 @@
 
   <script>
 
-    var json_data = JSON.parse( localStorage.getItem('json_data') );
+    var json_data = JSON.parse( localStorage.getItem('json_data') )
 
     if (json_data) {
       json_data.forEach(element => {
         if (element) {
-          newTodo(element.title, element.description, element.id);
+          newTodo(element.title, element.description, element.id, element.deadline)
         }
-      });
+      })
     }
 
-    registerEventListeners();
+    registerEventListeners()
 
     function registerEventListeners() {
-      var deleteButtons = document.querySelectorAll(".delete");
+      var deleteButtons = document.querySelectorAll(".delete")
       deleteButtons.forEach(function(button) {
         button.addEventListener("click", function() {
-          var todoID = this.parentNode.getAttribute('data-id');
-          deleteTodo(todoID);
-        });
-      });
-      var todoLinks = document.querySelectorAll("a[data-target='#todoModal']");
+          var todoID = this.parentNode.getAttribute('data-id')
+          deleteTodo(todoID)
+        })
+      })
+      var todoLinks = document.querySelectorAll("a[data-target='#todoModal']")
       todoLinks.forEach(function(link) {
         link.addEventListener("click", function() {
-          var todoID = this.parentNode.getAttribute('data-id');
-          var currentTodo = getTodo(todoID);
-          // console.log(currentTodo);
-          document.getElementById("todo-title").innerHTML = currentTodo.title;
-          document.getElementById("todo-description").innerHTML = currentTodo.description;
-        });
-      });
+          var todoID = this.parentNode.getAttribute('data-id')
+          var currentTodo = getTodo(todoID)
+          document.getElementById("todo-title").innerHTML = currentTodo.title
+          document.getElementById("todo-description").innerHTML = currentTodo.description
+          document.getElementById("todo-deadline-display").innerHTML = currentTodo.deadline || "No deadline"
+        })
+      })
     }
 
     function getTodo(id) {
-      var json_temp = JSON.parse( localStorage.getItem('json_data') );
-      return json_temp[id];
+      var json_temp = JSON.parse( localStorage.getItem('json_data'))
+      if (!json_temp) return null
+      return json_temp[id]
     }
 
     function deleteTodo(todoID) {
-      var todoElement = document.querySelector("li[data-id='" + todoID + "']");
+      var todoElement = document.querySelector("li[data-id='" + todoID + "']")
       if (todoElement) {
-        todoElement.style.display = "none";
+        todoElement.style.display = "none"
       }
       
-      var json_temp = JSON.parse( localStorage.getItem('json_data') );
-      delete json_temp[todoID];
+      var json_temp = JSON.parse( localStorage.getItem('json_data') )
+      delete json_temp[todoID]
       localStorage.setItem('json_data', 
         JSON.stringify(json_temp)
-      );
+      )
 
     }
 
-    function newTodo(todoTitle, todoDesc, todoID) {
+    function newTodo(todoTitle, todoDesc, todoID, todoDeadline) {
       if (!todoTitle && !todoID) {
-        todoTitle = document.getElementById("todoTitle").value;
-        todoDesc = document.getElementById("todoDesc").value;
+        todoTitle = document.getElementById("todoTitle").value
+        todoDesc = document.getElementById("todoDesc").value
+        todoDeadline = document.getElementById("todo-deadline").value
+
         if (todoTitle) {
-          var todoID = storeTodoLocal(todoTitle, todoDesc);
+          var todoID = storeTodoLocal(todoTitle, todoDesc, todoDeadline)
         }
       }
       if (todoTitle) {
-        // console.log(todoTitle);
-        var todoHTML = '<a href="#" data-toggle="modal" data-target="#todoModal">' + todoTitle + '</a> <a href="#" class="btn btn-sm btn-danger m-1 delete">Delete</a>';
-        var todoList = document.getElementById("todo-list");
-        var newTodoElement = document.createElement("li");
-        newTodoElement.setAttribute("data-id", todoID);
-        newTodoElement.innerHTML = todoHTML;
-        todoList.appendChild(newTodoElement);
-        registerEventListeners();
+        var todoHTML = '<a href="#" data-toggle="modal" data-target="#todoModal">' + todoTitle + '</a> <a href="#" class="btn btn-sm btn-danger m-1 delete">Delete</a>'
+        var todoList = document.getElementById("todo-list")
+        var newTodoElement = document.createElement("li")
+        newTodoElement.setAttribute("data-id", todoID)
+        newTodoElement.innerHTML = todoHTML
+        todoList.appendChild(newTodoElement)
+        registerEventListeners()
       }
     }
 
-    function storeTodoLocal(todoTitle, todoDesc) {
+    function storeTodoLocal(todoTitle, todoDesc, todoDeadline) {
       
       // retrieve and parse existing JSON from localstorage
-      var json_temp = JSON.parse( localStorage.getItem('json_data') );
+      var json_temp = JSON.parse( localStorage.getItem('json_data') )
 
       if (!json_temp) {
-        json_temp = [];
+        json_temp = []
       }
 
       // creating a new todo ID based on length of existing localstorage array
-      var todoID = json_temp.length;
+      var todoID = json_temp.length
 
       // add new todo object to JSON
       json_temp.push({
         "id": todoID,
         "title": todoTitle,
         "description": todoDesc,
+        "deadline": todoDeadline,
         "completed": false
-      });
+      })
 
       // log updated JSON to console
-      console.log(json_temp);
+      console.log(json_temp)
 
       // stringify updated JSON and store back in localStorage
       localStorage.setItem('json_data', 
         JSON.stringify(json_temp)
-      );
+      )
 
       // return ID of new todo
-      return todoID;
+      return todoID
 
     }
 
     function deleteAllTodos() {
       if (confirm("Are you sure you want to delete all of your Todos?")) {
-        localStorage.removeItem('json_data');
-        document.getElementById("todo-list").innerHTML = "";
+        localStorage.removeItem('json_data')
+        document.getElementById("todo-list").innerHTML = ""
       }
     }
 
